@@ -71,3 +71,6 @@ tests/fixtures/*.yaml
 
 # uv
 .python-version
+
+# pre-commit
+.pre-commit-cache
