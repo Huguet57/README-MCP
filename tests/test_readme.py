@@ -2,7 +2,7 @@ import pytest
 import vcr
 from fastapi.testclient import TestClient
 
-from main import app
+from readme_mcp.main import app
 
 client = TestClient(app)
 
