@@ -1,6 +1,6 @@
 # Makefile for README-MCP
 
-.PHONY: help install dev test test-unit test-integration test-load lint format clean build docker-build docker-run docker-push deploy-local deploy-k8s
+.PHONY: help install dev test test-unit test-integration test-load test-mcp lint format clean build docker-build docker-run docker-push deploy-local deploy-k8s mcp-dev mcp-run mcp-install mcp-standalone
 
 # Variables
 PROJECT_NAME := readme-mcp
@@ -18,11 +18,26 @@ install: ## Install dependencies
 dev: ## Run development server
 	uv run python scripts/dev.py
 
+mcp-dev: ## Run MCP server with inspector
+	mcp dev mcp_server.py
+
+mcp-run: ## Run MCP server
+	uv run python mcp_server.py
+
+mcp-standalone: ## Run standalone MCP server (no backend required)
+	uv run python mcp_server_standalone.py
+
+mcp-install: ## Install MCP server in Claude Desktop
+	mcp install mcp_server.py --name "README-MCP"
+
 test: ## Run all tests
 	uv run pytest
 
 test-unit: ## Run unit tests only
 	uv run pytest tests/test_readme.py -v
+
+test-mcp: ## Run MCP-specific tests
+	uv run pytest tests/test_mcp_*.py -v
 
 test-integration: ## Run integration tests only
 	uv run pytest tests/test_integration.py -v -m integration
@@ -31,10 +46,10 @@ test-load: ## Run load tests (requires k6)
 	k6 run --vus 50 --duration 30s tests/load/load_test.js
 
 lint: ## Run linting
-	uv run ruff check src/ tests/ scripts/
+	uv run ruff check src/ tests/ scripts/ *.py
 
 format: ## Format code
-	uv run ruff format src/ tests/ scripts/
+	uv run ruff format src/ tests/ scripts/ *.py
 
 clean: ## Clean build artifacts
 	find . -type f -name "*.pyc" -delete
