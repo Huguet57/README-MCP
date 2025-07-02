@@ -201,5 +201,137 @@ def test_get_file_empty_path():
     assert response.status_code == 422
 
 
+@vcr.use_cassette("tests/fixtures/flask_root_directory.yaml", record_mode="once")
+def test_list_directory_root():
+    """Test directory listing for repository root"""
+    response = client.post(
+        "/ls",
+        json={
+            "repo_url": "https://github.com/pallets/flask",
+            "dir": "",
+            "ref": "main",
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert "entries" in data
+    assert "total_count" in data
+    assert "path" in data
+    assert data["path"] == ""
+    assert isinstance(data["entries"], list)
+    assert data["total_count"] == len(data["entries"])
+
+    # Check for expected files in Flask repository root
+    entry_names = [entry["name"] for entry in data["entries"]]
+    assert "README.md" in entry_names or "README.rst" in entry_names
+    assert "pyproject.toml" in entry_names
+
+
+@vcr.use_cassette("tests/fixtures/flask_src_directory.yaml", record_mode="once")
+def test_list_directory_subdirectory():
+    """Test directory listing for subdirectory"""
+    response = client.post(
+        "/ls",
+        json={
+            "repo_url": "https://github.com/pallets/flask",
+            "dir": "src",
+            "ref": "main",
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert "entries" in data
+    assert data["path"] == "src"
+    assert isinstance(data["entries"], list)
+
+    # Should contain flask directory
+    entry_names = [entry["name"] for entry in data["entries"]]
+    assert "flask" in entry_names
+
+
+@vcr.use_cassette("tests/fixtures/nonexistent_directory.yaml", record_mode="once")
+def test_list_directory_nonexistent():
+    """Test directory listing for non-existent directory"""
+    response = client.post(
+        "/ls",
+        json={
+            "repo_url": "https://github.com/pallets/flask",
+            "dir": "nonexistent_directory",
+            "ref": "main",
+        },
+    )
+
+    assert response.status_code == 404
+
+
+def test_list_directory_invalid_path():
+    """Test directory listing with path traversal attempt"""
+    response = client.post(
+        "/ls",
+        json={
+            "repo_url": "https://github.com/pallets/flask",
+            "dir": "../../../etc",
+            "ref": "main",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_list_directory_invalid_repo_url():
+    """Test directory listing with invalid repository URL"""
+    response = client.post(
+        "/ls",
+        json={
+            "repo_url": "https://example.com/invalid/repo",
+            "dir": "",
+            "ref": "main",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+@vcr.use_cassette("tests/fixtures/flask_file_as_directory.yaml", record_mode="once")
+def test_list_directory_file_path():
+    """Test directory listing when path points to file"""
+    response = client.post(
+        "/ls",
+        json={
+            "repo_url": "https://github.com/pallets/flask",
+            "dir": "pyproject.toml",
+            "ref": "main",
+        },
+    )
+
+    assert response.status_code == 400
+
+
+def test_list_directory_valid_entries():
+    """Test that directory entries have correct structure"""
+    response = client.post(
+        "/ls",
+        json={
+            "repo_url": "https://github.com/pallets/flask",
+            "dir": "",
+            "ref": "main",
+        },
+    )
+
+    if response.status_code == 200:
+        data = response.json()
+        if data["entries"]:
+            entry = data["entries"][0]
+            assert "name" in entry
+            assert "path" in entry
+            assert "sha" in entry
+            assert "type" in entry
+            assert entry["type"] in ["file", "dir"]
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

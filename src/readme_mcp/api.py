@@ -5,7 +5,15 @@ import base64
 from fastapi import APIRouter, HTTPException
 
 from .github_client import GitHubClient
-from .models import FileRequest, FileResponse, ReadmeRequest, ReadmeResponse
+from .models import (
+    DirectoryEntry,
+    DirectoryRequest,
+    DirectoryResponse,
+    FileRequest,
+    FileResponse,
+    ReadmeRequest,
+    ReadmeResponse,
+)
 
 router = APIRouter()
 github_client = GitHubClient()
@@ -81,6 +89,52 @@ async def get_file(request: FileRequest) -> FileResponse:
             size=file_data["size"],
             encoding=file_data["encoding"],
             download_url=file_data["download_url"],
+        )
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=str(e)) from None
+
+
+@router.post("/ls", response_model=DirectoryResponse)
+async def list_directory(request: DirectoryRequest) -> DirectoryResponse:
+    """List directory contents from GitHub repository.
+
+    Args:
+        request: Directory request with repo URL, directory path, ref, and optional token
+
+    Returns:
+        Directory listing with entries and metadata
+
+    Raises:
+        HTTPException: If repository/directory not found, path invalid, or other errors
+    """
+    owner, repo = github_client.parse_repo_url(request.repo_url)
+
+    try:
+        directory_data = await github_client.list_directory(
+            owner, repo, request.dir, request.ref, request.token
+        )
+
+        # Convert GitHub API response to our DirectoryEntry model
+        entries = []
+        for item in directory_data:
+            entry = DirectoryEntry(
+                name=item["name"],
+                path=item["path"],
+                sha=item["sha"],
+                size=item.get("size"),  # Directories don't have size
+                type=item["type"],
+                download_url=item.get(
+                    "download_url"
+                ),  # Directories don't have download_url
+            )
+            entries.append(entry)
+
+        return DirectoryResponse(
+            entries=entries,
+            total_count=len(entries),
+            path=request.dir,
         )
     except Exception as e:
         if isinstance(e, HTTPException):

@@ -106,6 +106,67 @@ class GitHubClient:
 
             return file_data
 
+    async def list_directory(
+        self,
+        owner: str,
+        repo: str,
+        path: str = "",
+        ref: str = "main",
+        token: str | None = None,
+    ) -> list[dict]:
+        """List contents of a directory in GitHub repository.
+
+        Args:
+            owner: Repository owner username
+            repo: Repository name
+            path: Directory path within repository (empty for root)
+            ref: Git reference (branch, tag, commit SHA)
+            token: GitHub authentication token
+
+        Returns:
+            List of directory entries from GitHub API
+
+        Raises:
+            HTTPException: If directory not found, path is file, or API error occurs
+        """
+        headers = {"Accept": "application/vnd.github.v3+json"}
+        if token:
+            headers["Authorization"] = f"token {token}"
+
+        async with httpx.AsyncClient() as client:
+            # Use contents API for directory listing
+            if path:
+                url = f"{self.base_url}/repos/{owner}/{repo}/contents/{path}"
+            else:
+                url = f"{self.base_url}/repos/{owner}/{repo}/contents"
+
+            params = {"ref": ref}
+
+            response = await client.get(url, headers=headers, params=params)
+
+            if response.status_code == 404:
+                raise HTTPException(status_code=404, detail="Directory not found")
+            elif response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code, detail="GitHub API error"
+                )
+
+            directory_data = response.json()
+
+            # Check if response is a single file (dict) instead of directory (list)
+            if isinstance(directory_data, dict):
+                raise HTTPException(
+                    status_code=400, detail="Path is a file, not a directory"
+                )
+
+            # Enforce 1,000 entry limit per CLAUDE.md requirements
+            if len(directory_data) > 1000:
+                raise HTTPException(
+                    status_code=413, detail="Directory too large (max 1,000 entries)"
+                )
+
+            return directory_data
+
     def parse_repo_url(self, repo_url: str) -> tuple[str, str]:
         """Parse GitHub repository URL into owner and repo name.
 

@@ -24,6 +24,7 @@ async def root():
         "endpoints": {
             "/readme": "Get README file from GitHub repository",
             "/file": "Get specific file from GitHub repository",
+            "/ls": "List directory contents from GitHub repository",
         },
     }
 
