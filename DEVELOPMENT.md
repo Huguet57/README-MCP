@@ -8,7 +8,7 @@ This document lays out the development plan for README-MCP, a minimal service th
 
 * Provide ground‑truth documentation and code to AI agents with zero LLM tokens.
 * Keep the service stateless, cache‑friendly, and easy to port across runtimes.
-* Support both public and private GitHub repositories (via PAT).
+* Support public GitHub repositories.
 
 ## Functional Requirements
 
@@ -85,7 +85,7 @@ Response: { entries:[{path,type,size}], sha, etag }
 | 2     | Day 5–7   | `/file` handler + size & path guards             |
 | 3     | Day 8–10  | `/ls` handler + directory parsing                |
 | 4     | Day 11–12 | Shared caching layer & ETag support              |
-| 5     | Day 13–14 | Integration tests against public & private repos |
+| 5     | Day 13–14 | Integration tests against public repos           |
 | 6     | Day 15    | Deploy to staging, load test                     |
 | 7     | Day 16    | Production cut‑over & tag v1.0.0                 |
 
@@ -111,6 +111,7 @@ Response: { entries:[{path,type,size}], sha, etag }
 
 ## Future Enhancements
 
+* Support private GitHub repositories (via Personal Access Token).
 * Support GitLab & Bitbucket via adapter pattern.
 * Optional `recurse` flag for deep directory listings.
 * Webhook to push cache invalidations on new commits.
