@@ -1,0 +1,7 @@
+{
+  "readme-mcp": {
+    "command": "uv",
+    "args": ["run", "python", "/Users/andreu/Documents/readme-mcp/mcp_server.py"],
+    "cwd": "/Users/andreu/Documents/readme-mcp"
+  }
+}

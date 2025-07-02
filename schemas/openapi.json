@@ -1,0 +1,500 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "README-MCP",
+    "description": "GitHub repository documentation service",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/readme": {
+      "post": {
+        "summary": "Get Readme",
+        "description": "Get README file from GitHub repository.\n\nArgs:\n    request: README request with repo URL, ref, and optional token\n\nReturns:\n    README content and metadata\n\nRaises:\n    HTTPException: If repository not found, README missing, or other errors",
+        "operationId": "get_readme_readme_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadmeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadmeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/file": {
+      "post": {
+        "summary": "Get File",
+        "description": "Get file from GitHub repository.\n\nArgs:\n    request: File request with repo URL, path, ref, and optional token\n\nReturns:\n    File content and metadata\n\nRaises:\n    HTTPException: If repository/file not found, path invalid, or other errors",
+        "operationId": "get_file_file_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ls": {
+      "post": {
+        "summary": "List Directory",
+        "description": "List directory contents from GitHub repository.\n\nArgs:\n    request: Directory request with repo URL, directory path, ref, and optional token\n\nReturns:\n    Directory listing with entries and metadata\n\nRaises:\n    HTTPException: If repository/directory not found, path invalid, or other errors",
+        "operationId": "list_directory_ls_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "description": "Root endpoint with service information.",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Health check endpoint.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DirectoryEntry": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "sha": {
+            "type": "string",
+            "title": "Sha"
+          },
+          "size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "download_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "path",
+          "sha",
+          "size",
+          "type",
+          "download_url"
+        ],
+        "title": "DirectoryEntry",
+        "description": "Model for a single directory entry."
+      },
+      "DirectoryRequest": {
+        "properties": {
+          "repo_url": {
+            "type": "string",
+            "title": "Repo Url"
+          },
+          "dir": {
+            "type": "string",
+            "title": "Dir",
+            "default": ""
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref",
+            "default": "main"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "repo_url"
+        ],
+        "title": "DirectoryRequest",
+        "description": "Request model for directory listing endpoint."
+      },
+      "DirectoryResponse": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/DirectoryEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entries",
+          "total_count",
+          "path"
+        ],
+        "title": "DirectoryResponse",
+        "description": "Response model for directory listing."
+      },
+      "FileRequest": {
+        "properties": {
+          "repo_url": {
+            "type": "string",
+            "title": "Repo Url"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref",
+            "default": "main"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "repo_url",
+          "path"
+        ],
+        "title": "FileRequest",
+        "description": "Request model for file endpoint."
+      },
+      "FileResponse": {
+        "properties": {
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "sha": {
+            "type": "string",
+            "title": "Sha"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "encoding": {
+            "type": "string",
+            "title": "Encoding"
+          },
+          "download_url": {
+            "type": "string",
+            "title": "Download Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "content",
+          "name",
+          "path",
+          "sha",
+          "size",
+          "encoding",
+          "download_url"
+        ],
+        "title": "FileResponse",
+        "description": "Response model for file content."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ReadmeRequest": {
+        "properties": {
+          "repo_url": {
+            "type": "string",
+            "title": "Repo Url"
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref",
+            "default": "main"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "repo_url"
+        ],
+        "title": "ReadmeRequest",
+        "description": "Request model for README endpoint."
+      },
+      "ReadmeResponse": {
+        "properties": {
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "sha": {
+            "type": "string",
+            "title": "Sha"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "encoding": {
+            "type": "string",
+            "title": "Encoding"
+          },
+          "download_url": {
+            "type": "string",
+            "title": "Download Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "content",
+          "name",
+          "path",
+          "sha",
+          "size",
+          "encoding",
+          "download_url"
+        ],
+        "title": "ReadmeResponse",
+        "description": "Response model for README content."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

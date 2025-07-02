@@ -1,0 +1,148 @@
+# Kubernetes deployment for README-MCP
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: readme-mcp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: readme-mcp
+  namespace: readme-mcp
+  labels:
+    app: readme-mcp
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: readme-mcp
+  template:
+    metadata:
+      labels:
+        app: readme-mcp
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: readme-mcp
+        image: readme-mcp:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: PYTHONPATH
+          value: "/app/src"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: readme-mcp-service
+  namespace: readme-mcp
+  labels:
+    app: readme-mcp
+spec:
+  selector:
+    app: readme-mcp
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: readme-mcp-ingress
+  namespace: readme-mcp
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - readme-mcp.example.com
+    secretName: readme-mcp-tls
+  rules:
+  - host: readme-mcp.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: readme-mcp-service
+            port:
+              number: 80
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: readme-mcp-pdb
+  namespace: readme-mcp
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: readme-mcp
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: readme-mcp-hpa
+  namespace: readme-mcp
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: readme-mcp
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

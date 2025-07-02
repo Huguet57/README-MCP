@@ -1,0 +1,60 @@
+# Google Cloud Run deployment configuration
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: readme-mcp
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/execution-environment: gen2
+spec:
+  template:
+    metadata:
+      annotations:
+        # CPU allocation
+        run.googleapis.com/cpu-throttling: "false"
+        # Memory allocation
+        run.googleapis.com/memory: "512Mi"
+        # Maximum concurrent requests per instance
+        run.googleapis.com/execution-environment: gen2
+        # Startup CPU boost
+        run.googleapis.com/startup-cpu-boost: "true"
+        # Minimum instances (to reduce cold starts)
+        autoscaling.knative.dev/minScale: "1"
+        # Maximum instances
+        autoscaling.knative.dev/maxScale: "100"
+    spec:
+      # Timeout for each request
+      timeoutSeconds: 300
+      containerConcurrency: 80
+      containers:
+      - image: gcr.io/PROJECT_ID/readme-mcp:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: PYTHONPATH
+          value: "/app/src"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        resources:
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 12
+  traffic:
+  - percent: 100
+    latestRevision: true

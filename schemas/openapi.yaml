@@ -1,0 +1,335 @@
+components:
+  schemas:
+    DirectoryEntry:
+      description: Model for a single directory entry.
+      properties:
+        download_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Download Url
+        name:
+          title: Name
+          type: string
+        path:
+          title: Path
+          type: string
+        sha:
+          title: Sha
+          type: string
+        size:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Size
+        type:
+          title: Type
+          type: string
+      required:
+      - name
+      - path
+      - sha
+      - size
+      - type
+      - download_url
+      title: DirectoryEntry
+      type: object
+    DirectoryRequest:
+      description: Request model for directory listing endpoint.
+      properties:
+        dir:
+          default: ''
+          title: Dir
+          type: string
+        ref:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: main
+          title: Ref
+        repo_url:
+          title: Repo Url
+          type: string
+        token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Token
+      required:
+      - repo_url
+      title: DirectoryRequest
+      type: object
+    DirectoryResponse:
+      description: Response model for directory listing.
+      properties:
+        entries:
+          items:
+            $ref: '#/components/schemas/DirectoryEntry'
+          title: Entries
+          type: array
+        path:
+          title: Path
+          type: string
+        total_count:
+          title: Total Count
+          type: integer
+      required:
+      - entries
+      - total_count
+      - path
+      title: DirectoryResponse
+      type: object
+    FileRequest:
+      description: Request model for file endpoint.
+      properties:
+        path:
+          title: Path
+          type: string
+        ref:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: main
+          title: Ref
+        repo_url:
+          title: Repo Url
+          type: string
+        token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Token
+      required:
+      - repo_url
+      - path
+      title: FileRequest
+      type: object
+    FileResponse:
+      description: Response model for file content.
+      properties:
+        content:
+          title: Content
+          type: string
+        download_url:
+          title: Download Url
+          type: string
+        encoding:
+          title: Encoding
+          type: string
+        name:
+          title: Name
+          type: string
+        path:
+          title: Path
+          type: string
+        sha:
+          title: Sha
+          type: string
+        size:
+          title: Size
+          type: integer
+      required:
+      - content
+      - name
+      - path
+      - sha
+      - size
+      - encoding
+      - download_url
+      title: FileResponse
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
+    ReadmeRequest:
+      description: Request model for README endpoint.
+      properties:
+        ref:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: main
+          title: Ref
+        repo_url:
+          title: Repo Url
+          type: string
+        token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Token
+      required:
+      - repo_url
+      title: ReadmeRequest
+      type: object
+    ReadmeResponse:
+      description: Response model for README content.
+      properties:
+        content:
+          title: Content
+          type: string
+        download_url:
+          title: Download Url
+          type: string
+        encoding:
+          title: Encoding
+          type: string
+        name:
+          title: Name
+          type: string
+        path:
+          title: Path
+          type: string
+        sha:
+          title: Sha
+          type: string
+        size:
+          title: Size
+          type: integer
+      required:
+      - content
+      - name
+      - path
+      - sha
+      - size
+      - encoding
+      - download_url
+      title: ReadmeResponse
+      type: object
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+      type: object
+info:
+  description: GitHub repository documentation service
+  title: README-MCP
+  version: 0.1.0
+openapi: 3.1.0
+paths:
+  /:
+    get:
+      description: Root endpoint with service information.
+      operationId: root__get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: Root
+  /file:
+    post:
+      description: "Get file from GitHub repository.\n\nArgs:\n    request: File request\
+        \ with repo URL, path, ref, and optional token\n\nReturns:\n    File content\
+        \ and metadata\n\nRaises:\n    HTTPException: If repository/file not found,\
+        \ path invalid, or other errors"
+      operationId: get_file_file_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get File
+  /health:
+    get:
+      description: Health check endpoint.
+      operationId: health_check_health_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: Health Check
+  /ls:
+    post:
+      description: "List directory contents from GitHub repository.\n\nArgs:\n   \
+        \ request: Directory request with repo URL, directory path, ref, and optional\
+        \ token\n\nReturns:\n    Directory listing with entries and metadata\n\nRaises:\n\
+        \    HTTPException: If repository/directory not found, path invalid, or other\
+        \ errors"
+      operationId: list_directory_ls_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectoryRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectoryResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: List Directory
+  /readme:
+    post:
+      description: "Get README file from GitHub repository.\n\nArgs:\n    request:\
+        \ README request with repo URL, ref, and optional token\n\nReturns:\n    README\
+        \ content and metadata\n\nRaises:\n    HTTPException: If repository not found,\
+        \ README missing, or other errors"
+      operationId: get_readme_readme_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadmeRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadmeResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Readme

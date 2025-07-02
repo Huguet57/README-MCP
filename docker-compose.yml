@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  readme-mcp:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app/src
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    
+  # Optional Redis cache (for future caching implementation)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  redis_data:

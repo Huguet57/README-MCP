@@ -33,5 +33,21 @@ jobs:
     - name: Run ruff formatter
       run: uv run ruff format --check .
     
-    - name: Run tests
-      run: uv run pytest test_readme.py -v
+    - name: Run unit tests
+      run: uv run pytest tests/test_readme.py -v
+    
+    - name: Run integration tests
+      run: uv run pytest tests/test_integration.py -v -m integration
+      continue-on-error: true  # Integration tests may fail due to GitHub rate limits
+    
+    - name: Generate OpenAPI schema
+      run: uv run python scripts/generate_openapi.py
+    
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          schemas/
+          .pytest_cache/

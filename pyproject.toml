@@ -7,8 +7,10 @@ requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.14",
     "httpx>=0.28.1",
+    "mcp>=1.10.1",
     "pydantic>=2.11.7",
     "uvicorn>=0.35.0",
+    "fastmcp>=0.1.0",
 ]
 
 [dependency-groups]
@@ -32,6 +34,10 @@ packages = ["src/readme_mcp"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-v"
+markers = [
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+    "load: marks tests as load tests",
+]
 
 [tool.ruff]
 line-length = 88
